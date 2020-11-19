@@ -1,6 +1,7 @@
 #RPG
 
-import string, random, pickle
+import string, random, pickle, os.path
+from os import path
 
 #TODO:
 #Make enemy groups
@@ -21,10 +22,17 @@ def showInstructions():
     print("========================")
 
 def showStatus():
+    print("\n")
     showMap()
     print("\n========================")
-    print("You are in the " + rooms[currentRoom]["name"])
+    print("You are in " + rooms[currentRoom]["name"])
     print("------------------------")
+    #story
+    if "init" in rooms[currentRoom] and rooms[currentRoom]["initSwitch"] == "on":
+        print(rooms[currentRoom]["init"])
+        rooms[currentRoom]["initSwitch"] = "off"
+        print("------------------------")
+    #directions
     if "east" in rooms[currentRoom]:
         print("There is a door to the east.")
     if "west" in rooms[currentRoom]:
@@ -72,7 +80,11 @@ def showStatus():
             if ambush > 30:
                 print("Ambush attack!")
                 battleStart(currentRoom, rooms[currentRoom]["monster"])
+    #sign
+    if "sign" in rooms[currentRoom]:
+        print("There is a sign in this room.")
         print("------------------------")
+    print("------------------------")
     print("------------------------")
     print("Commands: ")
     print("'go [direction]'")
@@ -81,6 +93,7 @@ def showStatus():
     print("'fight [monstername]'")
     print("'drop [item]'")
     print("'equip [item] [player]'")
+    print("'read [sign]'")
     print("------------------------")    
 
 def enemyAttack(currentRoom, monster, playerNo):
@@ -105,6 +118,7 @@ def enemyAttack(currentRoom, monster, playerNo):
             print(player[playerNo]["name"] + " defended successfully!")
         elif damage <= 0:
             damage = 1
+        #take damage
         player[target]["currhp"] -= damage
         print(rooms[currentRoom]["monster"] + " attacks " + player[target]["name"] + " for " + str(damage) + " damage!")
         print(player[target]["name"] + " HP: " + str(player[target]["currhp"]))
@@ -268,6 +282,7 @@ def displayEnemyHP():
 def battleStatus():
     for item in player:
         print("Name: " + player[item]["name"])
+        print("Level: " + str(player[item]["level"]))
         print("HP: " + str(player[item]["currhp"]) + "/" + str(player[item]["maxhp"]))
         print("Strength: " + str(player[item]["strength"]))
         print("Defense: " + str(player[item]["defense"]))
@@ -355,7 +370,29 @@ def battleStart(currentRoom, monster):
                 print("battleOn = " + str(battleOn))
             #========= use =========
             elif move[0] == "use":
-                print(player[item]["name"] + " uses.")
+                #catch if only use is entered.
+                if len(move) == 1:
+                    print("Please specify what to use.")
+                #catch if item not in inventory.
+                elif move[1] not in inventory:
+                    print("You do not have a " + move[1])
+                #catch if direction not specified.
+                elif len(move) == 2:
+                    print("Please specify who to use the " + move[1] + " on.")
+                #use item
+                #use potion
+                elif move[1] == "potion":
+                    #catch if no target is given
+                    if len(move) < 2:
+                        print("Please specify who will drink the potion.")
+                    #check if target is a valid party member
+                    if searchDict(player, move[2]):
+                        print("That is not a party member!\n")
+                    else:
+                        if str(player[item]["name"]) != move[2]:
+                            print(player[item]["name"] + " gives the " + move[1] + " to " + move[2])
+                        healPlayer(move[2])
+                        inventory.remove("potion")
             #========= run =========
             elif move[0] == "run":
                 print(player[item]["name"] + " is a whuss.")
@@ -429,7 +466,8 @@ def saveRooms(filename,roomSet):
     print(roomSet)
     #create filename string
     newRooms = str(filename) + ".pkl"
-    newCurrentRoom = str(filename) + "currentroom.pkl"
+    #newCurrentRoom = str(filename) + "currentroom.pkl"
+    newCurrentRoom = "currentroom.pkl"
     print(newCurrentRoom)
     fi = open(newRooms, "bw")
     pickle.dump(roomSet,fi)
@@ -496,7 +534,23 @@ def showMap():
     count = 4 - row
     while count > 0:
         print("[-----]")
-        count -= 1    
+        count -= 1
+
+def searchDict(values, search):
+    for item in values:
+        for j in values[item]:
+            if search in j:
+                return item
+    return None
+
+def healPlayer(char):
+    for item in player:
+        if char == player[item]["name"]:
+            print(str(player[item]["name"]) + " drank the potion.\n")
+            player[item]["currhp"] = player[item]["maxhp"]
+            print(player[item]["name"]+ " has been healed!\n")
+            print(player[item]["name"] + ": " + str(player[item]["currhp"]) + "/" + str(player[item]["maxhp"]))
+      
 
 nextLevel = [0, 10, 20, 35, 50, 85, 115, 175, 275, 400, 500, 650, 800, 1000]
 
@@ -510,42 +564,42 @@ armor = ["leather tunic", "chain mail", "shirt", "iron mail", "steel mail", "bro
 
 acc = ["brass ring", "copper ring", "iron ring", "bandana", "silver ring", "gold ring", "ruby ring", "emerald ring", "sapphire ring", "diamond ring"]
 
-rooms = { 1 : { "name" : "Hall" ,
+rooms = { 1 : { "name" : "the Hall" ,
                 "east" : 2 ,
                 "south" : 6} ,
           
-          2 : { "name" : "Bedroom" ,
+          2 : { "name" : "the Bedroom" ,
                 "west" : 1 ,
                 "south" : 7 ,
                 "item" : "sword" ,
                 "east" : 3 } ,
           
-          6 : { "name" : "Kitchen" ,
+          6 : { "name" : "the Kitchen" ,
                 "north" : 1 ,
                 "monster" : "imp" ,
                 "item" : "cookie" } ,
           
-          7 : { "name" : "Bathroom" ,
+          7 : { "name" : "the Bathroom" ,
                 "north" : 2 ,
                 "monster" : "slime" ,
                 "item" : "key" } ,
           
-          3 : { "name" : "Dining Room" ,
+          3 : { "name" : "the Dining Room" ,
                 "west" : 2 ,
                 "east" : "lock" ,
                 "item" : "key" } ,
 
-          4 : { "name" : "Bedroom 2" ,
+          4 : { "name" : "the Bedroom 2" ,
                 "west" : 3 ,
                 "east" : 5 ,
                 "item" : "key" },
           
-          5 : { "name" : "Closet" ,
+          5 : { "name" : "the Closet" ,
                 "west" : 4 ,
                 "south" : 10 ,
                 "item" : "potion" },
           
-          10 : { "name" : "Secret Room" ,
+          10 : { "name" : "the Secret Room" ,
                 "north" : 5 ,
                 "monster" : "bat" ,
                 "item" : "coin" } }
@@ -558,6 +612,16 @@ monsters = { "slime" : { "name" : "slime" ,
                        "agility" : 3 ,
                        "exp" : 5 ,
                        "gold" : 1 ,
+                       "item" : "goo" } ,
+             
+             "blob" : { "name" : "blob" ,
+                       "maxhp" : 3 ,
+                       "currhp" : 3 ,
+                       "strength" : 2 ,
+                       "defense" : 1 ,
+                       "agility" : 1 ,
+                       "exp" : 4 ,
+                       "gold" : 3 ,
                        "item" : "goo" } ,
 
              "imp" : { "name" : "imp" ,
@@ -590,6 +654,16 @@ monsters = { "slime" : { "name" : "slime" ,
                        "gold" : 8 ,
                        "item" : "goblin cap" } ,
 
+             "boss" : { "name" : "boss" ,
+                       "maxhp" : 20 ,
+                       "currhp" : 20 ,
+                       "strength" : 10 ,
+                       "defense" : 5 ,
+                       "agility" : 5 ,
+                       "exp" : 50 ,
+                       "gold" : 20 ,
+                       "item" : "trophy" } ,
+
              "monster" : { "name" : "monster" ,
                        "maxhp" : 15 ,
                        "currhp" : 15 ,
@@ -603,9 +677,9 @@ monsters = { "slime" : { "name" : "slime" ,
 player = { 1 : { "name" : "Hero" ,
                  "maxhp" : 10 ,
                  "currhp" : 10 ,
-                 "strength" : 3 ,
-                 "defense" : 1 ,
-                 "agility" : 3 ,
+                 "strength" : 5 ,
+                 "defense" : 2 ,
+                 "agility" : 4 ,
                  "luck" : 2 ,
                  "exp" : 0 ,
                  "next" : 10 ,
@@ -620,8 +694,8 @@ player = { 1 : { "name" : "Hero" ,
                  "maxhp" : 9 ,
                  "currhp" : 9 ,
                  "strength" : 3 ,
-                 "defense" : 2 ,
-                 "agility" : 2 ,
+                 "defense" : 6 ,
+                 "agility" : 3 ,
                  "luck" : 1 ,
                  "exp" : 0 ,
                  "next" : 10 ,
@@ -636,8 +710,8 @@ player = { 1 : { "name" : "Hero" ,
                  "maxhp" : 5 ,
                  "currhp" : 5 ,
                  "strength" : 1 ,
-                 "defense" : 1 ,
-                 "agility" : 1 ,
+                 "defense" : 2 ,
+                 "agility" : 6 ,
                  "luck" : 1 ,
                  "exp" : 0 ,
                  "next" : 10 ,
@@ -698,7 +772,32 @@ while True:
         #catch if going up or down to a new floor
         elif move[1] == "up" or move[1] == "down":
             if rooms[currentRoom][move[1]] is not int:
-                rooms = loadRooms(rooms[currentRoom][move[1]])
+                #save curent floor to retain object permanence
+                previousfloor = "temp" + rooms[0]["name"]
+                saveRooms(previousfloor,rooms)
+                #load next floor
+                nextfloor = "temp" + rooms[currentRoom][move[1]]
+                #try:
+                    #rooms = loadRooms(nextfloor)
+                    #pass
+                #except:
+                    #print("No temp file.")
+                    #pass
+                #try:
+                    #rooms = loadRooms(rooms[currentRoom][move[1]])
+                    #pass
+                #except:
+                    #print("Load failed.")
+                    #print(currentRoom)
+                    #pass
+                if path.exists(nextfloor + ".pkl"):
+                    print("Temp exists!")
+                    #load saved instance of floor
+                    rooms = loadRooms(nextfloor)
+                else:
+                    print("Temp doesn't exist...")
+                    #load original floor
+                    rooms = loadRooms(rooms[currentRoom][move[1]])
         #move direction
         elif move[1] in rooms[currentRoom]:
             currentRoom = rooms[currentRoom][move[1]]
@@ -738,7 +837,7 @@ while True:
             print("You do not have a " + move[1])
         #catch if direction not specified.
         elif len(move) == 2:
-            print("Please specify where to use the " + move[1] + ".")
+            print("Please specify where or what to use the " + move[1] + " on.")
         #use item
         elif move[1] in inventory and move[2] in rooms[currentRoom]:
             #use key
@@ -766,6 +865,16 @@ while True:
             #direction is not valid for item
             else:
                 print("You can't use the " + move[1] + " in that direction.")
+        #use potion
+        elif move[1] == "potion":
+            #catch if no target is given
+            if len(move) < 2:
+                print("Please specify who will drink the potion.")
+            #check if target is a valid party member
+            if searchDict(player, move[2]):
+                print("That is not a party member!\n")
+            else:
+                healPlayer(move[2])
         #item is not usable
         else:
             print("You can't do that.")
@@ -800,7 +909,21 @@ while True:
             for i in player:
                 if move[1] == player[i]["name"]:
                     print("It's not nice to kill " + player[i]["name"])
-
+    #========= read =========
+    elif move[0] == "read":
+        #catch if only command is entered.
+        if len(move) == 1:
+            print("Please specify what to read.")
+        #read sign
+        elif move[1] == "sign":
+            #check if sign exists
+            if move[1] in rooms[currentRoom]:
+                print(rooms[currentRoom][move[1]])
+                print("")
+            else:
+                print("There is no sign here.")
+        else:
+            print("There is nothing to read.")
     #========= save =========
     elif move[0] == "save":
         #catch if only command is entered.
@@ -818,8 +941,8 @@ while True:
             inventory = loadInventory(inventory)
             print("Final load: ")
             print(player)
-            rooms = loadRooms("rpgrooms")
-            currentRoom = loadCurrentRoom("rpgroomscurrentroom.pkl")
+            currentRoom = loadCurrentRoom("currentroom.pkl")
+            rooms = loadRooms("rpgrooms") 
     #command is not valid
     #========= loadroom =========
     elif move[0] == "loadroom":
@@ -882,7 +1005,6 @@ while True:
                     #else:
                         #length = 0
                         #rooms[currentRoom]["dropped"] = {length : [item]}
-
         else:
             print("Please enter a valid item to drop!")
     #========= equip =========
@@ -902,6 +1024,9 @@ while True:
         if len(move) == 4:
             print("Equip for who?")
         #command is not valid
+    #========= look =========
+    elif move[0] == "look":
+        print(rooms[currentRoom]["init"])
     #========= new command =========
     elif move[0] == "command":
         #catch if only command is entered.
