@@ -94,7 +94,11 @@ def showStatus():
     print("'drop [item]'")
     print("'equip [item] [player]'")
     print("'read [sign]'")
+    print("'status'")
+    print("'equipment'")
     print("------------------------")    
+
+#Alternate damage formula: attack*(100/(100+defense))
 
 def enemyAttack(currentRoom, monster, playerNo):
     #choose which player to attack
@@ -133,6 +137,8 @@ def enemyAttack(currentRoom, monster, playerNo):
             return battleOn
 
 def playerAttack(currentRoom, monster, playerNo):
+    #weapon = player[playerNo]["weapon"]
+    #weaponValue = items[][]
     damage = player[playerNo]["strength"] - monsters[rooms[currentRoom]["monster"]]["defense"] + random.randint(0,1)
     if damage <= 0:
         damage = 1
@@ -290,7 +296,14 @@ def battleStatus():
         print("Luck: " + str(player[item]["luck"]))
         print("------------------------")
 
-
+def equipmentStatus():
+    for item in player:
+        print("Name: " + player[item]["name"])
+        print("Weapon: " + player[item]["weapon"])
+        print("Armor: " + player[item]["armor"])
+        print("Helm: " + player[item]["helm"])      
+        print("Acc: " + player[item]["acc"])
+        print("------------------------")
         
 def battleStart(currentRoom, monster):
     print("------------------------") 
@@ -550,7 +563,99 @@ def healPlayer(char):
             player[item]["currhp"] = player[item]["maxhp"]
             print(player[item]["name"]+ " has been healed!\n")
             print(player[item]["name"] + ": " + str(player[item]["currhp"]) + "/" + str(player[item]["maxhp"]))
-      
+
+def equipPlayer(equipment, char):
+    print("Starting...")
+    print(equipment)
+    print(char)
+
+    for number in items:
+        if items[number]["name"] == equipment:
+            print(items[number]["name"])
+            if items[number]["type"] != "weapon" or "armor" or "helm" or "acc":
+                print("item type: " + items[number]["type"])
+                print(equipment + " not equippable.")
+        if equipment == items[number]["name"] and items[number]["type"] == "weapon":
+            print("weapon")
+            #check if no weapon equipped
+            for item in player:
+                if char == player[item]["name"] and player[item]["weapon"] == "none":
+                    print(player[item]["name"] + ": " + player[item]["weapon"])
+                    #equip weapon
+                    player[item]["weapon"] = equipment
+                    print(char + " equipped " + equipment + ".\n")
+                    inventory.remove(equipment)
+                    break
+                else:
+                    print(char + " already has " + player[item]["weapon"] + " equipped. Equip " + equipment + " anyway? (y or n) \n")
+                    move = input(">").split()
+                    if len(move) <= 2:
+                        print("move[0] = " + move[0] + " move: " + str(move))
+                        if move[0] == "y" or "yes":
+                            #remove equipment
+                            removedequipment = player[item]["weapon"]
+                            inventory.append(removedequipment)
+                            print(char + " unequipped " + removedequipment + ".\n")
+                            #equip weapon
+                            player[item]["weapon"] = equipment
+                            print(char + " equipped " + equipment + ".\n")
+                            inventory.remove(equipment)
+                            break
+                        if move[0] == "n" or "no":
+                            print("weapon not changed.")
+                            break
+                        else:
+                            print("please say 'y' or 'n'.")
+                    else:
+                        print("Let\'s just start over.")
+                        break
+        elif equipment == items[number]["name"] and items[number]["type"] == "armor":
+            print("armor")
+        elif equipment == items[number]["name"] and items[number]["type"] == "helm":
+            print("helm")
+        elif equipment == items[number]["name"] and items[number]["type"] == "acc":
+            print("acc")
+
+    """
+    for item in player:
+        if char == player[item]["name"]:
+            print(player[item]["name"]
+            #check what kind of item is being equipped
+            for number in items:
+                if equipment == items[number]["name"] and items[number]["type"] == "weapon":
+                    print("weapon")
+                if equipment in weapon:
+                #check if no weapon equipped
+                if player[item]["weapon"] == "none":
+                    print(player[item]["name"] + ": " + player[item]["weapon"])
+                    #equip weapon
+                    player[item]["weapon"] == equipment
+                    print(char + " equipped " + equipment + ".\n")
+                    inventory.remove(equipment)
+                else:
+                    print(char + " already has " + player[item]["weapon"] + "equipped. Equip " + equipment + "anyway? (y or n) \n")
+                    move = input(">").split()
+                    if move == "y" or "yes":
+                        #remove equipment
+                        removedequipment = player[item]["weapon"]
+                        inventory.add(removedequipment)
+                        #equip weapon
+                        player[item]["weapon"] = equipment
+                        print(char + " equipped " + equipment + ".\n")
+                        inventory.remove(equipment)
+                    elif move == "n" or "no":
+                        print("weapon not changed.")
+            elif equipment in helm:
+                #check if weapon already equipped
+                print("helm")
+            elif equipment in armor:
+                #check if weapon already equipped
+                print("armor")
+            elif equipment in acc:
+                #check if weapon already equipped
+                print("acc")
+            #check if character already has an item equipped here
+    """
 
 nextLevel = [0, 10, 20, 35, 50, 85, 115, 175, 275, 400, 500, 650, 800, 1000]
 
@@ -564,9 +669,35 @@ armor = ["leather tunic", "chain mail", "shirt", "iron mail", "steel mail", "bro
 
 acc = ["brass ring", "copper ring", "iron ring", "bandana", "silver ring", "gold ring", "ruby ring", "emerald ring", "sapphire ring", "diamond ring"]
 
+items = { 1 : { "name" : "cookie" ,
+                "type" : "consumable" ,
+                "value" : 10 ,
+                "droppable" : "yes" } ,
+
+          2 : { "name" : "potion" ,
+                "type" : "consumable" ,
+                "value" : 20 ,
+                "droppable" : "yes" } ,
+
+          3 : { "name" : "key" ,
+                "type" : "consumable" ,
+                "droppable" : "yes" } ,
+
+          4 : { "name" : "sword" ,
+                "type" : "weapon" ,
+                "value" : 2 ,
+                "droppable" : "yes" } ,
+
+          5 : { "name" : "knife" ,
+                "type" : "weapon" ,
+                "value" : 1 }
+          }
+          
+
 rooms = { 1 : { "name" : "the Hall" ,
                 "east" : 2 ,
-                "south" : 6} ,
+                "south" : 6,
+                "item" : "knife" } ,
           
           2 : { "name" : "the Bedroom" ,
                 "west" : 1 ,
@@ -602,7 +733,8 @@ rooms = { 1 : { "name" : "the Hall" ,
           10 : { "name" : "the Secret Room" ,
                 "north" : 5 ,
                 "monster" : "bat" ,
-                "item" : "coin" } }
+                "item" : "coin" }
+          }
 
 monsters = { "slime" : { "name" : "slime" ,
                        "maxhp" : 3 ,
@@ -672,7 +804,8 @@ monsters = { "slime" : { "name" : "slime" ,
                        "agility" : 2 ,
                        "exp" : 5 ,
                        "gold" : 1 ,
-                       "item" : "item" } }
+                       "item" : "item" }
+             }
 
 player = { 1 : { "name" : "Hero" ,
                  "maxhp" : 10 ,
@@ -720,7 +853,8 @@ player = { 1 : { "name" : "Hero" ,
                  "weapon" : "none",
                  "helm" : "none",
                  "armor" : "none",
-                 "acc" : "none" } }
+                 "acc" : "none" }
+           }
 
 story = { 1 : { 1 : { 1 : "Text" ,
                     2 : "Text" ,
@@ -730,7 +864,8 @@ story = { 1 : { 1 : { 1 : "Text" ,
                 2 : { "story" : "Text2" ,
                       "story2" : "Text2" ,
                       "story3" : "Text2" ,
-                      "switch" : 0 } } ,
+                      "switch" : 0 }
+                } ,
 
           2 : { 1 : { "story" : "Text" ,
                     "story2" : "Text" ,
@@ -740,7 +875,9 @@ story = { 1 : { 1 : { 1 : "Text" ,
                 2 : { "story" : "Text2" ,
                       "story2" : "Text2" ,
                       "story3" : "Text2" ,
-                      "switch" : 0 } } }
+                      "switch" : 0 }
+                }
+          }
 
 #Initialize
 currentRoom = 1
@@ -958,6 +1095,9 @@ while True:
     #========= status =========
     elif move[0] == "status":
         battleStatus()
+    #========= equipment =========
+    elif move[0] == "equipment":
+        equipmentStatus()
     #========= map =========
     elif move[0] == "map":
         showMap()
@@ -1009,20 +1149,49 @@ while True:
             print("Please enter a valid item to drop!")
     #========= equip =========
     elif move[0] == "equip":
+        item = ""
         #catch if only command is entered.
         if len(move) == 1:
             print("Please specify what to equip.")
         #check length of item
+        elif len(move) == 2:
+            if move[1] not in inventory:
+                print(move[1] + " not in inventory!")
+            else:
+                print("Equip " + move[1] + " for who?")
         elif len(move) == 3:
-            item = move[1] + " " + move[2]
-        else:
-            item = move[1]
-        #catch if item is not in inventory
-        if item not in inventory:
-            print("You don't have " + item + " to equip.")
-        #catch if player not specified.
-        if len(move) == 4:
-            print("Equip for who?")
+            #check if last word is a player
+            if searchDict(player, move[2]):
+                print(move[2] + " is not in your party!")
+            else:
+                #if item is one word in length
+                item = move[1]
+                #catch if item is not in inventory
+                if item not in inventory:
+                    print("You don't have " + item + " to equip.")
+                else:
+                    #equip item
+                    print("One word.")
+                    print(item)
+                    print(move[2])
+                    equipPlayer(item, move[2])
+        #if item is two words in length
+        elif len(move) == 4:
+            #check if last word is a player
+            if searchDict(player, move[3]):
+                print(move[3] + " is not in your party!")
+            else:
+                #item is two words
+                item = move[1] + " " + move[2]
+                #catch if item is not in inventory
+                if item not in inventory:
+                    print("You don't have " + item + " to equip.")
+                else:
+                    #equip item
+                    print("Two words.")
+                    print(item)
+                    print(move[3])
+                    equipPlayer(item, move[3])            
         #command is not valid
     #========= look =========
     elif move[0] == "look":
